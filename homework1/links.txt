@@ -1,0 +1,9 @@
+
+Social Network Analysis of Game of Thrones in NetworkX
+https://predictivehacks.com/social-network-analysis-of-game-of-thrones/
+
+graphonline
+https://graphonline.ru/en/
+
+Stanford Large Network Dataset Collection
+https://snap.stanford.edu/data/
