@@ -1,0 +1,8 @@
+
+
+	1._ Convertir columna de pandas a una lista:
+	df['col_name'].tolist()
+
+	2._ Iterar sobre las filas de un data frame
+	for index, row in df.iterrows():
+    	print(row['field1'], row['field2'])
