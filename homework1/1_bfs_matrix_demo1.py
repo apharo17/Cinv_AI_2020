@@ -18,25 +18,51 @@ def get_adj_matrix(df, source_col, target_col):
 
     nodes = set(df[source_col].tolist()) | set(df[target_col].tolist())
     n = len(nodes)
-    nodes_dict = {}
+    node_to_index = {}
     i = 0
     for node in nodes:
-        nodes_dict[node] = i
+        node_to_index[node] = i
         i += 1
 
     A = np.zeros((n, n))
 
     for index, row in df.iterrows():
-        s = nodes_dict[row['Source']]
-        t = nodes_dict[row['Target']]
+        s = node_to_index[row['Source']]
+        t = node_to_index[row['Target']]
         A[s][t] = 1
 
-    #print(nodes_dict)
-    return A
+    #print(node_to_index)
+    return node_to_index, A
+
+
+def bfs(A, s, plot_step=False):
+    n = A.shape[0]
+    explored = set()
+    frontier = list()
+    frontier.append(s)
+
+    while len(frontier) > 0:
+        print(frontier)
+        u = frontier.pop(0)
+        if u not in explored:
+            explored.add(u)
+            for v in range(n):
+                if A[u][v] > 0:
+                    if v not in explored:
+                        frontier.append(v)
+
 
 
 df = load_graph_df(["stormofswords.csv"])
 df = df[['Source', 'Target']] #Discard weights for BFS
 df.drop_duplicates(subset=['Source', 'Target'], inplace=True)
 
-A = get_adj_matrix(df, 'Source', 'Target')
+node_to_index, A = get_adj_matrix(df, 'Source', 'Target')
+index_to_node = {node_to_index[node]:node for node in node_to_index.keys()}
+print(index_to_node)
+
+bfs(A, 5, plot_step=False)
+
+#G = nx.from_pandas_edgelist(df, source='Source', target='Target')
+#nx.draw(G, node_size=50, width=0.5)
+#plt.show()
