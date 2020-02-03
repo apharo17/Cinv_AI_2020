@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
+
+
 def load_graph_df(file_names):
     li = []
 
@@ -35,6 +37,37 @@ def get_adj_matrix(df, source_col, target_col):
     return node_to_index, A
 
 
+def get_adj_list(df, source_col, target_col, node_to_index):
+
+    nodes = set(df[source_col].tolist()) | set(df[target_col].tolist())
+    n = len(nodes)
+    node_to_index = {}
+    i = 0
+    for node in nodes:
+        node_to_index[node] = i
+        i += 1
+
+    source_to_index = {}
+    adj_list = []
+    for index, row in df.iterrows():
+        s = node_to_index[row['Source']]
+        t = node_to_index[row['Target']]
+        if s not in source_to_index:
+            source_to_index[s] = len(adj_list)
+            adj_list.append([])
+        adj_list[source_to_index[s]].append(t)
+
+    return source_to_index, adj_list
+
+def from_adj_list(source_to_index, adj_list):
+    G = nx.DiGraph()
+    for s in source_to_index:
+        i = source_to_index[s]
+        for t in adj_list[i]:
+            G.add_edge(s, t)
+    return G
+
+
 def show_graph(s, t, explored, frontier):
 
     if G is not None:
@@ -53,7 +86,7 @@ def show_graph(s, t, explored, frontier):
                 color_map[i] = 'gray'
             if id_node==t:
                 color_map[i] = 'black'
-            #Por hacer:
+            #TODO:
             #s y t de negro y marcarlas con un label
             #Marcar u
 
@@ -64,6 +97,8 @@ def show_graph(s, t, explored, frontier):
 
 
 def bfs(A, s, t, plot_step=False):
+    #TODO: verbose parameter
+
     n = A.shape[0]
     explored = set()
     frontier = []
@@ -108,6 +143,7 @@ df = load_graph_df(["stormofswords.csv"])
 df = df[['Source', 'Target']] #Discard weights for BFS
 df.drop_duplicates(subset=['Source', 'Target'], inplace=True)
 
+#Option 1: Load from adj matrix
 node_to_index, A = get_adj_matrix(df, 'Source', 'Target')
 index_to_node = {node_to_index[node]:node for node in node_to_index.keys()}
 #print(index_to_node)
@@ -118,6 +154,17 @@ G = nx.DiGraph()
 G.add_edges_from(edges)
 pos = nx.nx_pydot.graphviz_layout(G)
 
-s = node_to_index['Hodor']
-t = node_to_index['Jon']
-print(bfs(A, s, t, plot_step=True))
+#s = node_to_index['Hodor']
+#t = node_to_index['Jon']
+#print(bfs(A, s, t, plot_step=True))
+
+
+#Option 2: Load from adj list
+node_to_index = None
+source_to_index, adj_list = get_adj_list(df, 'Source', 'Target', node_to_index)
+G2 = from_adj_list(source_to_index, adj_list)
+pos = nx.nx_pydot.graphviz_layout(G2)
+nx.draw(G2, node_size=50, width=0.5,  arrowsize=5, pos=pos)
+plt.show()
+
+
