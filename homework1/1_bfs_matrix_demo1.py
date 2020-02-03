@@ -143,9 +143,10 @@ def multiply(head_to_index, adj_list, vec):
     res = np.zeros(vec.shape)
     for head in range(len(vec)):
         if vec[head] > 0:
-            idx = head_to_index[head]
-            for tail in adj_list[idx][1:]:
-                res[tail] += 1
+            if head in head_to_index:
+                idx = head_to_index[head]
+                for tail in adj_list[idx][1:]:
+                    res[tail] += 1
     return res
 
 def mat2adjlist(A):
@@ -160,7 +161,7 @@ def mat2adjlist(A):
                 adj_list[head_to_index[row]].append(col)
     return adj_list
 
-def bfs_matrix(n, adj_list, s, t):
+def bfs_matrix(n, adj_list, s):
 
     i = 0
     head_to_index = {}
@@ -186,12 +187,43 @@ def bfs_matrix(n, adj_list, s, t):
         distance[indexes] += np.ones(len(indexes))
 
 
+def bfs_matrix(n, adj_list, s, t, verbose=False):
 
-'''
+    i = 0
+    head_to_index = {}
+    for l in adj_list:
+        head = l[0]
+        head_to_index[head] = i
+        i += 1
+
+    visited = np.zeros(n)
+    visited[s] = 1
+    frontier = visited
+
+    for i in range(n):
+        #Calculate the new frontier: the neighbors of the current frontier
+        frontier = multiply(head_to_index, adj_list, frontier)
+        #Discard what has been visited
+        frontier = np.array(np.logical_and(frontier, np.logical_not(visited)), dtype='int32')
+
+        indexes = (np.nonzero(frontier))[0] #Index 0 to discard the tuple result of np.nonzero function
+
+        if verbose:
+            print(indexes)
+
+        if len(indexes) == 0:
+            break
+
+        visited[indexes] = np.ones(len(indexes))
+        if visited[t] > 0:
+            return True
+
+    return False
+
 df = load_graph_df(["stormofswords.csv"])
 df = df[['Source', 'Target']] #Discard weights for BFS
 df.drop_duplicates(subset=['Source', 'Target'], inplace=True)
-'''
+
 
 '''
 #Option 1: Load from adj matrix
@@ -211,14 +243,18 @@ print(bfs(A, s, t, plot_step=True))
 '''
 
 #Option 2: Load from adj list
-'''
 node_to_index = None
 node_to_index, adj_list = get_adj_list(df, 'Source', 'Target')
-G2 = from_adj_list(adj_list)
-pos = nx.nx_pydot.graphviz_layout(G2)
-nx.draw(G2, node_size=50, width=0.5,  arrowsize=5, pos=pos)
-plt.show()
-'''
+s = node_to_index['Cersei']
+t = node_to_index['Melisandre']
+print(bfs_matrix(len(node_to_index), adj_list, s, t, verbose=True))
+
+
+#G2 = from_adj_list(adj_list)
+#pos = nx.nx_pydot.graphviz_layout(G2)
+#nx.draw(G2, node_size=50, width=0.5,  arrowsize=5, pos=pos)
+#plt.show()
+
 
 #Prueba de la funcion de multiplicacion
 '''
