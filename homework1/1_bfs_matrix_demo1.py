@@ -35,21 +35,72 @@ def get_adj_matrix(df, source_col, target_col):
     return node_to_index, A
 
 
-def bfs(A, s, plot_step=False):
+def show_graph(s, t, explored, frontier):
+
+    if G is not None:
+
+        frontier_set = set(frontier)
+        #print(frontier_set)
+        color_map = ['blue' for id_node in G]
+        i = 0
+        for id_node in G:
+            if id_node in explored:
+                color_map[i] = 'yellow'
+            elif id_node in frontier_set:
+                color_map[i] = 'red'
+
+            if id_node==s:
+                color_map[i] = 'gray'
+            if id_node==t:
+                color_map[i] = 'black'
+            #Por hacer:
+            #s y t de negro y marcarlas con un label
+            #Marcar u
+
+            i += 1
+
+        nx.draw(G, node_size=50, width=0.5, node_color=color_map, arrowsize=5, pos=pos)
+        plt.show()
+
+
+def bfs(A, s, t, plot_step=False):
     n = A.shape[0]
     explored = set()
-    frontier = list()
+    frontier = []
     frontier.append(s)
+    i=0
+
+    if plot_step:
+        print('-----Start-----')
+        print('Frontier:', frontier)
+        print('Explored:', explored)
+
 
     while len(frontier) > 0:
-        print(frontier)
+        i +=1
+
         u = frontier.pop(0)
         if u not in explored:
             explored.add(u)
+
+            if plot_step:
+                print('-----Iteration-----:', i)
+                print('Frontier:', frontier)
+                show_graph(s, t, explored, frontier)
+
+            if u == t:
+                return True
+
             for v in range(n):
                 if A[u][v] > 0:
                     if v not in explored:
                         frontier.append(v)
+
+            if plot_step:
+                print('Explored:', explored)
+                show_graph(s, t, explored, frontier)
+
+    return False
 
 
 
@@ -59,10 +110,14 @@ df.drop_duplicates(subset=['Source', 'Target'], inplace=True)
 
 node_to_index, A = get_adj_matrix(df, 'Source', 'Target')
 index_to_node = {node_to_index[node]:node for node in node_to_index.keys()}
-print(index_to_node)
+#print(index_to_node)
 
-bfs(A, 5, plot_step=False)
+rows, cols = np.where(A == 1)
+edges = zip(rows.tolist(), cols.tolist())
+G = nx.DiGraph()
+G.add_edges_from(edges)
+pos = nx.nx_pydot.graphviz_layout(G)
 
-#G = nx.from_pandas_edgelist(df, source='Source', target='Target')
-#nx.draw(G, node_size=50, width=0.5)
-#plt.show()
+s = node_to_index['Hodor']
+t = node_to_index['Jon']
+print(bfs(A, s, t, plot_step=True))
