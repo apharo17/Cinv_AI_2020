@@ -37,7 +37,7 @@ def get_adj_matrix(df, source_col, target_col):
     return node_to_index, A
 
 
-def get_adj_list(df, source_col, target_col, node_to_index):
+def get_adj_list(df, source_col, target_col):
 
     nodes = set(df[source_col].tolist()) | set(df[target_col].tolist())
     n = len(nodes)
@@ -54,16 +54,16 @@ def get_adj_list(df, source_col, target_col, node_to_index):
         t = node_to_index[row['Target']]
         if s not in source_to_index:
             source_to_index[s] = len(adj_list)
-            adj_list.append([])
+            adj_list.append([s]) #Add head to the list
         adj_list[source_to_index[s]].append(t)
 
-    return source_to_index, adj_list
+    return node_to_index, adj_list
 
-def from_adj_list(source_to_index, adj_list):
+def from_adj_list(adj_list):
     G = nx.DiGraph()
-    for s in source_to_index:
-        i = source_to_index[s]
-        for t in adj_list[i]:
+    for l in adj_list:
+        s = l[0]
+        for t in l[1:]:
             G.add_edge(s, t)
     return G
 
@@ -139,6 +139,7 @@ def bfs(A, s, t, plot_step=False):
 
 
 
+
 df = load_graph_df(["stormofswords.csv"])
 df = df[['Source', 'Target']] #Discard weights for BFS
 df.drop_duplicates(subset=['Source', 'Target'], inplace=True)
@@ -161,8 +162,8 @@ pos = nx.nx_pydot.graphviz_layout(G)
 
 #Option 2: Load from adj list
 node_to_index = None
-source_to_index, adj_list = get_adj_list(df, 'Source', 'Target', node_to_index)
-G2 = from_adj_list(source_to_index, adj_list)
+node_to_index, adj_list = get_adj_list(df, 'Source', 'Target')
+G2 = from_adj_list(adj_list)
 pos = nx.nx_pydot.graphviz_layout(G2)
 nx.draw(G2, node_size=50, width=0.5,  arrowsize=5, pos=pos)
 plt.show()
