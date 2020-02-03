@@ -22,12 +22,15 @@
 		conda install -c anaconda graphviz
 		conda install -c anaconda pydot
 
-	5._ PENDIENTE
+	5._ Cargar un grafo a partir de una matrix de adyacencia:
 
 	rows, cols = np.where(A == 1)
 	edges = zip(rows.tolist(), cols.tolist())
 	G = nx.Graph()
 	G.add_edges_from(edges)
+
+	6._ Cambiar el tipo de dato de un np array:
+	np.array(myarray, dtype='int32')
 
 
 	02 02 20

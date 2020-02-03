@@ -160,28 +160,31 @@ def mat2adjlist(A):
                 adj_list[head_to_index[row]].append(col)
     return adj_list
 
-def bfs_matrix(n, source_to_index, adj_list, s, t):
-    explored = set()
-    frontier = []
-    frontier.append(s)
-    i = 0
+def bfs_matrix(n, adj_list, s, t):
 
-    while len(frontier) > 0:
+    i = 0
+    head_to_index = {}
+    for l in adj_list:
+        head = l[0]
+        head_to_index[head] = i
         i += 1
 
-        u = frontier.pop(0)
-        if u not in explored:
-            explored.add(u)
+    distance = np.zeros()
+    distance[s] = 1
+    frontier = distance
 
-            if u == t:
-                return True
+    for i in range(n):
+        #Calculate the new frontier: the neighbors of the current frontier
+        frontier = multiply(head_to_index, adj_list, frontier)
+        #Discard what has been visited
+        frontier = np.array(np.logical_and(frontier, np.logical_not(distance)), dtype='int32')
 
-            for v in range(n):
-                if A[u][v] > 0:
-                    if v not in explored:
-                        frontier.append(v)
+        indexes = (np.nonzero(frontier))[0] #Index 0 to discard the tuple result of np.nonzero function
+        if len(indexes) == 0:
+            break
 
-    return False
+        distance[indexes] += np.ones(len(indexes))
+
 
 
 '''
@@ -218,6 +221,7 @@ plt.show()
 '''
 
 #Prueba de la funcion de multiplicacion
+'''
 A = np.zeros((7,7))
 
 A[0][1] = A[0][2] = A[0][3] = 1
@@ -244,5 +248,5 @@ for l in adj_list:
 
 print()
 print(multiply(head_to_index, adj_list, vec))
-
+'''
 
