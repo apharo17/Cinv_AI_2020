@@ -2,6 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import graph_util as gu
 
 def load_graph_df(file_names):
     li = []
@@ -49,7 +50,7 @@ def multiply(head_to_index, adj_list, vec):
     return res
 
 
-def bfs_matrix(n, adj_list, s, t, verbose=False):
+def bfs_matrix(n, adj_list, s, t, labels, verbose=False):
 
     i = 0
     head_to_index = {}
@@ -71,7 +72,10 @@ def bfs_matrix(n, adj_list, s, t, verbose=False):
         indexes = (np.nonzero(frontier))[0] #Index 0 to discard the tuple result of np.nonzero function
 
         if verbose:
-            print(indexes)
+            print('Iteration:', i)
+            for idx in indexes[:-1]:
+                print(labels[idx], end=', ')
+            print(labels[indexes[-1]])
 
         if len(indexes) == 0:
             break
@@ -88,6 +92,10 @@ df = df[['Source', 'Target']] #Discard weights for BFS
 df.drop_duplicates(subset=['Source', 'Target'], inplace=True)
 
 node_to_index, adj_list = get_adj_list(df, 'Source', 'Target')
+index_to_node = [node for node in node_to_index.keys()]
 s = node_to_index['Cersei']
 t = node_to_index['Melisandre']
-print(bfs_matrix(len(node_to_index), adj_list, s, t, verbose=True))
+#print(bfs_matrix(len(node_to_index), adj_list, s, t, index_to_node, verbose=True))
+
+
+print(gu.dfs_matrix(len(node_to_index), adj_list, s, t, index_to_node, verbose=True))

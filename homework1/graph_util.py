@@ -1,9 +1,8 @@
 import numpy as np
 
-def multiply_canon(head_to_index, adj_list, e):
+def multiply_canon(n, head_to_index, adj_list, e):
 
     head = e
-    n = len(head_to_index)
     res = np.zeros(n)
 
     if head in head_to_index:
@@ -13,7 +12,8 @@ def multiply_canon(head_to_index, adj_list, e):
     return res
 
 
-def dfs_matrix(n, adj_list, s, t, verbose=False):
+
+def dfs_matrix(n, adj_list, s, t, labels, verbose=False):
 
     i = 0
     head_to_index = {}
@@ -23,27 +23,45 @@ def dfs_matrix(n, adj_list, s, t, verbose=False):
         i += 1
 
     depth = 0
-    depth_to_indexes = [[] for i in n]
     visited = np.zeros(n)
+    neighbors = np.zeros((n,n))
+    depth_to_indexes = [[] for i in range(n)]
+
+    u = s
     visited[s] = 1
 
-    neighbors = np.array((n,n)) #Checar dimension
-    neighbors[:, depth] = multiply_canon(head_to_index, adj_list, s) #Get neighbors of s, with depth zero
+    # Get neighbors of s discarding visited nodes
+    temp = multiply_canon(n, head_to_index, adj_list, u)
+    neighbors[:, depth] = np.array(np.logical_and(temp, np.logical_not(visited)), dtype='int32')
     depth_to_indexes[depth] = list(
         (np.nonzero(neighbors[:, depth]))[0])  # Index 0 to discard the tuple result of np.nonzero function
 
-    while len(depth_to_indexes[0]) > 0:
-        u = depth_to_indexes[depth].pop(0)
-        depth += 1
+    while True:
+        if depth == 0 and len(depth_to_indexes[depth]) == 0:
+            return False
 
-        if u == t:
-            return True
+        if verbose:
+            print('Depth:', depth, '\t Selected node:', labels[u])
+            indexes = depth_to_indexes[depth]
+            if len(indexes) > 0:
+                for idx in indexes[:-1]:
+                    print(labels[idx], end=', ')
+                print(labels[indexes[-1]])
+            else:
+                print('Empty')
 
-        if depth < n:
+        if len(depth_to_indexes[depth]) > 0:
+            u = depth_to_indexes[depth].pop(0)
+            visited[u] = 1
+            depth += 1
+            if u == t:
+                return True
 
-            neighbors[:, depth + 1] = multiply_canon(head_to_index, adj_list, u)
-            depth_to_indexes[depth+1] = list(
-                (np.nonzero(neighbors[:, depth+1]))[0])  # Index 0 to discard the tuple result of np.nonzero function
+            # Get neighbors of u discarding visited nodes
+            temp = multiply_canon(n, head_to_index, adj_list, u)
+            neighbors[:, depth] = np.array(np.logical_and(temp, np.logical_not(visited)), dtype='int32')
+            depth_to_indexes[depth] = list(
+                (np.nonzero(neighbors[:, depth]))[0])  # Index 0 to discard the tuple result of np.nonzero function
 
         else:
             depth -= 1
