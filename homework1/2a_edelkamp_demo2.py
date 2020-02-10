@@ -1,11 +1,13 @@
 
 N = 8
 
-class Vertex:
+
+class Node:
 
     def __init__(self):
         self.col = 0
         self.col_to_row = [-1 for col in range(N)]
+        self.parent = None
 
 
     def fromrow(self, row):
@@ -16,6 +18,14 @@ class Vertex:
         self.col = last_col
         for col in range(last_col+1):
             self.col_to_row[col] = col_to_row[col]
+
+
+    def get_parent(self):
+        return  self.parent
+
+
+    def set_parent(self, parent):
+        self.parent = parent
 
 
     def __get_next_rows(self, last_col):
@@ -49,7 +59,7 @@ class Vertex:
         next_rows = self.__get_next_rows(self.col)
         for row in next_rows:
             self.col_to_row[self.col + 1] = row
-            v = Vertex()
+            v = Node()
             v.fromlist(self.col_to_row, self.col+1)
             neighbors.append(v)
 
@@ -70,30 +80,41 @@ class Vertex:
         print(self.col_to_row)
 
 
-def bfs_queens(s, t):
+    def print_path(self):
+        u = self
+        u.print_info()
+        while u.parent is not None:
+            u = u.parent
+            u.print_info()
+
+
+def bfs_queens(s, t, verbose=False):
+
+    res = False
     frontier = []
     frontier.append(s)
+    u = None
 
     while len(frontier) > 0:
         u = frontier.pop(0)
         if u.equals(t):
-            return True
-        frontier.extend(u.get_neighbors())
+            res = True
+            break
+        neighbors = u.get_neighbors()
+        frontier.extend(neighbors)
+        for v in neighbors:
+            v.parent = u
 
-    return False
+    if verbose:
+        u.print_path()
+
+    return res
 
 
-'''s = Node()
+
+s = Node()
 s.fromrow(0)
-for u in s.get_neighbors():
-    for v in u.get_neighbors():
-        v.print_node()
-    print()'''
-
-
-s = Vertex()
-s.fromrow(0)
-t = Vertex()
+t = Node()
 t.fromlist([0,6,4,7,1,3,5,2], 7)
 #t.print_node()
-print(bfs_queens(s, t))
+print(bfs_queens(s, t, verbose=True))
