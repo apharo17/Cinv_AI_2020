@@ -1,16 +1,12 @@
 
 N = 8
 
-def bfs_queens(s, t):
-    pass
-
-
-
-class Node:
+class Vertex:
 
     def __init__(self):
         self.col = 0
         self.col_to_row = [-1 for col in range(N)]
+
 
     def fromrow(self, row):
         self.col_to_row[0] = row
@@ -53,21 +49,51 @@ class Node:
         next_rows = self.__get_next_rows(self.col)
         for row in next_rows:
             self.col_to_row[self.col + 1] = row
-            v = Node()
+            v = Vertex()
             v.fromlist(self.col_to_row, self.col+1)
             neighbors.append(v)
 
-        self.col_to_row[self.col+1] = -1
+        if len(next_rows) > 0:
+            self.col_to_row[self.col+1] = -1
 
         return neighbors
 
 
-    def print_node(self):
+    def equals(self, t):
+        for col in range(N):
+            if self.col_to_row[col] != t.col_to_row[col]:
+                return False
+        return True
+
+
+    def print_info(self):
         print(self.col_to_row)
 
-s = Node()
+
+def bfs_queens(s, t):
+    frontier = []
+    frontier.append(s)
+
+    while len(frontier) > 0:
+        u = frontier.pop(0)
+        if u.equals(t):
+            return True
+        frontier.extend(u.get_neighbors())
+
+    return False
+
+
+'''s = Node()
 s.fromrow(0)
 for u in s.get_neighbors():
     for v in u.get_neighbors():
         v.print_node()
-    print()
+    print()'''
+
+
+s = Vertex()
+s.fromrow(0)
+t = Vertex()
+t.fromlist([0,6,4,7,1,3,5,2], 7)
+#t.print_node()
+print(bfs_queens(s, t))
