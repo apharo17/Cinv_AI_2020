@@ -32,6 +32,10 @@
 	6._ Cambiar el tipo de dato de un np array:
 	np.array(myarray, dtype='int32')
 
+	7._ Metodos privados:
+	def __fun(self): 
+        print("Private method")
+
 
 	02 02 20
 	En mi primer approach del BFS: Se toma un nodo frontera u, para cada uno de sus vecinos v, se checa si v pertenece a los "visitados". Si v no ha sido visitado, v se agrega a la frontera.
