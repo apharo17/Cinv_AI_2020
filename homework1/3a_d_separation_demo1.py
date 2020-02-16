@@ -3,6 +3,7 @@ import numpy as np
 
 def fromfile(filename):
 
+    """Load graph from file"""
     f = open(filename)
     line = f.readline()
     n = int(line.strip())
@@ -20,6 +21,8 @@ def fromfile(filename):
 
 
 def check_edge(G, u, v):
+
+    """Check if there is an edge between u and v"""
     if G[u][v] == 1 or G[v][u] == 1:
         return True
     return False
@@ -27,6 +30,8 @@ def check_edge(G, u, v):
 
 
 def get_und_neighbors(G, u):
+
+    """Return the neighbors of u"""
     indexes_row = set((np.nonzero(G[u, :]))[0])
     indexes_col = set((np.nonzero(G[:, u]))[0])
     return indexes_row | indexes_col
@@ -34,6 +39,8 @@ def get_und_neighbors(G, u):
 
 
 def is_legal(G, A, triple):
+
+    """Check if the triple is legal"""
     u = triple[0]
     v = triple[1]
     w = triple[2]
@@ -60,11 +67,7 @@ def find_reachable_nodes(G, A, B):
     for u in B:
         R.add(u)
         neighbors = get_und_neighbors(G, u)
-        #print(u)
-        #print('jajaja')
-        #print(neighbors)
         for v in neighbors:
-            #print(u, v)
             R.add(v)
             edge_list.append((u,v))
             visited[u][v] = True
@@ -76,9 +79,7 @@ def find_reachable_nodes(G, A, B):
         num_edges = len(edge_list)
         for _ in range(num_edges):
             (u, v) = edge_list.pop(0)
-            #print(v)
             neighbors = get_und_neighbors(G, v)
-            #print(neighbors)
             for w in neighbors:
                 if not visited[v][w]:
                     if is_legal(G, A, (u,v,w)):
@@ -126,13 +127,15 @@ def find_d_separations(G, A, B):
             descendents[v] = True
 
     R = find_reachable_nodes(G,A,B)
-    #print(R)
     return set(range(n))-(A|R)
+
 
 
 G = fromfile('3a_data1.txt')
 n = G.shape[0]
 descendents = [False for i in range(n)]
+
+###Uncomment one of the following cases###
 
 #Case 1
 #res = find_d_separations(G, set(), {0})
@@ -147,7 +150,7 @@ descendents = [False for i in range(n)]
 #Case 6
 #res = find_d_separations(G, {1,2}, {0})
 #Case 7
-#res = find_d_separations(G, {4,5}, {0})
+res = find_d_separations(G, {4,5}, {0})
 
 
 print(res)
