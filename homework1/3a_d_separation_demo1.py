@@ -60,15 +60,14 @@ def find_reachable_nodes(G, A, B):
     for u in B:
         R.add(u)
         neighbors = get_und_neighbors(G, u)
-        print(u)
+        #print(u)
         #print('jajaja')
-        print(neighbors)
+        #print(neighbors)
         for v in neighbors:
             #print(u, v)
             R.add(v)
             edge_list.append((u,v))
             visited[u][v] = True
-            visited[v][u] = True
 
     found = True
     while found:
@@ -77,16 +76,15 @@ def find_reachable_nodes(G, A, B):
         num_edges = len(edge_list)
         for _ in range(num_edges):
             (u, v) = edge_list.pop(0)
-            print(v)
+            #print(v)
             neighbors = get_und_neighbors(G, v)
-            print(neighbors)
+            #print(neighbors)
             for w in neighbors:
                 if not visited[v][w]:
                     if is_legal(G, A, (u,v,w)):
                         R.add(w)
                         edge_list.append((v, w))
                         visited[v][w] = True
-                        visited[w][v] = True
                         found = True
     return R
 
@@ -128,18 +126,28 @@ def find_d_separations(G, A, B):
             descendents[v] = True
 
     R = find_reachable_nodes(G,A,B)
-    print(R)
+    #print(R)
     return set(range(n))-(A|R)
 
 
-
-#G = fromfile('3a_data1.txt')
-G = fromfile('3a_data2.txt')
+G = fromfile('3a_data1.txt')
 n = G.shape[0]
 descendents = [False for i in range(n)]
 
-#D = find_d_separations(G, {0}, {1,2,3,4,5,6,7,8})
-D = find_d_separations(G, {2}, {5})
-print(D)
+#Case 1
+#res = find_d_separations(G, set(), {0})
+#Case 2
+#res = find_d_separations(G, {1,6}, {0})
+#Case 3
+#res = find_d_separations(G, {1,4,8}, {0})
+#Case 4
+#res = find_d_separations(G, {1,4}, {0})
+#Case 5
+#res = find_d_separations(G, {2,8}, {0})
+#Case 6
+#res = find_d_separations(G, {1,2}, {0})
+#Case 7
+#res = find_d_separations(G, {4,5}, {0})
 
-#print(is_legal(G, {4}, (3,2,0)))
+
+print(res)
