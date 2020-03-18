@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #include <curand.h>
 #include <curand_kernel.h>
@@ -30,8 +31,8 @@ __global__ void sim_ann(curandState_t *states, float *d_res_arr){
 
 	x = (XMAX-XMIN)*curand_uniform(&states[blockIdx.x]) + XMIN;
 
-	cost = (x-3)*(x-3);
-	//cost = (x+3)*(x+3);
+	//cost = (x-3)*(x-3);
+	cost = sin(x)/x;
 
 	for (int step=0; step<MAX_STEPS; step++) {
 
@@ -46,8 +47,8 @@ __global__ void sim_ann(curandState_t *states, float *d_res_arr){
     	temp = (x+delta < XMAX) ? x+delta : XMAX;
     	x_ = (temp > XMIN) ? temp : XMIN;
     	
-    	cost_ = (x_-3)*(x_-3);
-    	//cost_ = (x_+3)*(x_+3);
+    	//cost_ = (x_-3)*(x_-3);
+    	cost_ = sin(x_)/x_;
 
     	if (cost_ < cost)
     		p = 1.0;
@@ -83,11 +84,13 @@ int main(void)
 
     float cost, cost_, res_;
     res = res_arr[0];
-    cost = (res-3)*(res-3);
+    //cost = (res-3)*(res-3);
+    cost = sin(res)/res;
     for (int i=1; i<N; i++) {
     	printf("%.4f\n",res_arr[i]);
     	res_ = res_arr[i];
-    	cost_ = (res_-3)*(res_-3);
+    	//cost_ = (res_-3)*(res_-3);
+    	cost_ = sin(res_)/res_;
     	if (cost_ < cost)
     	{
     		res = res_;
