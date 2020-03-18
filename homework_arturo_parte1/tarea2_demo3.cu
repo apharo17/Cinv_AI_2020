@@ -7,13 +7,9 @@
 #define XMAX 10.0
 #define XMIN (-10.0)
 
-double random() {
-	return (double) rand() / (RAND_MAX);
-}
-
 
 double f(double x) {
-	return x*x;
+	return pow(x-3,2);
 }
 
 
@@ -34,13 +30,7 @@ int main() {
 	srand(time(0));
 
 	temp = (1.0*rand()/RAND_MAX);
-	//printf("%.4f\n",temp);
-	//printf("%d\n",rand());
-	//printf("%d\n",RAND_MAX);
-	//printf("%.4f\n",(1.0*rand()/RAND_MAX));
 	temp = (1.0*rand()/RAND_MAX);
-	//printf("%.4f\n",temp);
-
 	x = (XMAX-XMIN)*temp + XMIN;
 	cost = f(x);
 
@@ -55,7 +45,6 @@ int main() {
 		//Get random neighbour
 		amp = (XMAX-XMIN) * frac / 10.0;
 		temp = (1.0*rand()/RAND_MAX);
-		printf("%.4f\n",temp);
     	delta = amp*temp - amp/2.0;
     	temp = (x+delta < XMAX) ? x+delta : XMAX;
     	x_ = (temp > XMIN) ? temp : XMIN;
@@ -68,7 +57,6 @@ int main() {
     		p = exp(-(cost_-cost)/t);
 
     	temp = (1.0*rand()/RAND_MAX);
-		printf("%.4f\n",temp);
     	if (p > temp)
     		x = x_;
     		cost = cost_;
