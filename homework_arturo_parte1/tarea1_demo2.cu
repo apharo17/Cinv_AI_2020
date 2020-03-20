@@ -1,5 +1,12 @@
 #include<stdio.h>
-#define N 4
+#define N 16
+
+
+char filename_a[] = "linsys_16_a.txt";
+char filename_b[] = "linsys_16_b.txt";
+float a[N][N];
+float b[N];
+
 
 
 __global__ void add(float *d_a, float *d_b, int *d_i) {
@@ -19,9 +26,6 @@ __global__ void add(float *d_a, float *d_b, int *d_i) {
 }
 
 
-float a[N][N];
-float b[N];
-
 
 void print_sysequ() {
 
@@ -37,11 +41,12 @@ void print_sysequ() {
 }
 
 
-int main(void) {
 
+void load_sysequ() {
+	
 	FILE* fp;
 
-    fp = fopen("linsys_4_a.txt","r");
+    fp = fopen(filename_a,"r");
     for (int i=0; i<N; i++) {
       for (int j=0; j<N; j++) {
         if (j == N-1)
@@ -52,18 +57,24 @@ int main(void) {
     }
     fclose(fp);
 
-    fp = fopen("linsys_4_b.txt","r");
+    fp = fopen(filename_b,"r");
     for (int i=0; i<N; i++) {
       fscanf(fp,"%f\n",&b[i]);
     }
     fclose(fp);
-	print_sysequ();
+
+}
 
 
+int main(void) {
 
 	float *d_a;
 	float *d_b;
 	int *d_i;
+
+	load_sysequ();	
+	print_sysequ();
+
 	cudaMalloc((void**)&d_a, N*N*sizeof(float));
 	cudaMalloc((void**)&d_b, N*sizeof(float));
 	cudaMalloc((void**)&d_i, sizeof(int));
