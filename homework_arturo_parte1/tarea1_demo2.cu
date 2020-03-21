@@ -1,8 +1,8 @@
 #include<stdio.h>
-#define N 4
+#define N 1000
 
 
-char input_file[]= "linsys_4.txt";
+char input_file[]= "linsys_1000.txt";
 float a[N][N];
 float b[N];
 
@@ -11,14 +11,21 @@ float b[N];
 __global__ void add(float *d_a, float *d_b, int *d_i) {
 	float temp;
 	int i = *d_i;
+	
+	//BlockId: the equation
 	int j = blockIdx.x + i + 1;
 	
+	//ThreadId: column
+	int k = threadIdx.x + i;
+
 	temp = d_a[j*N+i]/d_a[i*N+i];
-	for (int k=i; k<N; k++)
-	{
+	
+	if (k==N)
+		d_b[j] = d_b[j] - d_b[i]*temp;
+
+	else
 		d_a[j*N+k] = d_a[j*N+k] - d_a[i*N+k]*temp;
-	}
-	d_b[j] = d_b[j] - d_b[i]*temp;
+	
 }
 
 
@@ -79,11 +86,12 @@ int main(void) {
 	for (int i=0; i<N-1; i++)
 	{
 		cudaMemcpy(d_i, &i, sizeof(int), cudaMemcpyHostToDevice);
-		add<<<N-i-1,1>>>(d_a, d_b, d_i);
-		cudaDeviceSynchronize();
-		cudaMemcpy(a, d_a, N*N*sizeof(float), cudaMemcpyDeviceToHost);
-		cudaMemcpy(b, d_b, N*sizeof(float), cudaMemcpyDeviceToHost);		
+		add<<<N-i-1,N-i+1>>>(d_a, d_b, d_i);		
 	}
+
+	cudaDeviceSynchronize();
+	cudaMemcpy(a, d_a, N*N*sizeof(float), cudaMemcpyDeviceToHost);
+	cudaMemcpy(b, d_b, N*sizeof(float), cudaMemcpyDeviceToHost);
 
 	cudaFree(d_a);
 	cudaFree(d_b);
