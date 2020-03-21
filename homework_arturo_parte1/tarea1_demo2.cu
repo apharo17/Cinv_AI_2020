@@ -1,9 +1,8 @@
 #include<stdio.h>
-#define N 16
+#define N 4
 
 
-char filename_a[] = "linsys_16_a.txt";
-char filename_b[] = "linsys_16_b.txt";
+char filename[]= "linsys_4.txt";
 float a[N][N];
 float b[N];
 
@@ -46,20 +45,14 @@ void load_sysequ() {
 	
 	FILE* fp;
 
-    fp = fopen(filename_a,"r");
+    fp = fopen(filename,"r");
     for (int i=0; i<N; i++) {
-      for (int j=0; j<N; j++) {
-        if (j == N-1)
-          fscanf(fp,"%f\n",&a[i][j]);
+      for (int j=0; j<N+1; j++) {
+        if (j == N)
+          fscanf(fp,"%f\n",&b[i]);
         else
           fscanf(fp,"%f ",&a[i][j]);
       }
-    }
-    fclose(fp);
-
-    fp = fopen(filename_b,"r");
-    for (int i=0; i<N; i++) {
-      fscanf(fp,"%f\n",&b[i]);
     }
     fclose(fp);
 
