@@ -2,7 +2,7 @@
 #define N 4
 
 
-char filename[]= "linsys_4.txt";
+char input_file[]= "linsys_4.txt";
 float a[N][N];
 float b[N];
 
@@ -13,12 +13,9 @@ __global__ void add(float *d_a, float *d_b, int *d_i) {
 	int i = *d_i;
 	int j = blockIdx.x + i + 1;
 	
-
-	//temp = d_a[j][i]/d_a[i][i];
 	temp = d_a[j*N+i]/d_a[i*N+i];
 	for (int k=i; k<N; k++)
 	{
-		//d_a[j][k] = d_a[j][k] - d_a[i][k]*temp;
 		d_a[j*N+k] = d_a[j*N+k] - d_a[i*N+k]*temp;
 	}
 	d_b[j] = d_b[j] - d_b[i]*temp;
@@ -26,17 +23,22 @@ __global__ void add(float *d_a, float *d_b, int *d_i) {
 
 
 
-void print_sysequ() {
+void save_sysequ() {
 
+	FILE* fp;
+
+	fp = fopen("output.txt","w");
 	for (int i=0; i<N; i++)
 	{
-		for (int j=0; j<N; j++)
+		for (int j=0; j<N+1; j++)
 		{
-			printf("%.2f\t",a[i][j]);
+			if (j == N)
+	          fprintf(fp, "%.2f\n", b[i]);
+	        else
+	          fprintf(fp, "%.2f\t", a[i][j]);
 		}
-		printf("%.2f\n",b[i]);
 	}
-	printf("\n\n");
+	fclose(fp);
 }
 
 
@@ -45,7 +47,7 @@ void load_sysequ() {
 	
 	FILE* fp;
 
-    fp = fopen(filename,"r");
+    fp = fopen(input_file,"r");
     for (int i=0; i<N; i++) {
       for (int j=0; j<N+1; j++) {
         if (j == N)
@@ -59,14 +61,14 @@ void load_sysequ() {
 }
 
 
+
 int main(void) {
 
 	float *d_a;
 	float *d_b;
 	int *d_i;
 
-	load_sysequ();	
-	print_sysequ();
+	load_sysequ();
 
 	cudaMalloc((void**)&d_a, N*N*sizeof(float));
 	cudaMalloc((void**)&d_b, N*sizeof(float));
@@ -80,13 +82,14 @@ int main(void) {
 		add<<<N-i-1,1>>>(d_a, d_b, d_i);
 		cudaDeviceSynchronize();
 		cudaMemcpy(a, d_a, N*N*sizeof(float), cudaMemcpyDeviceToHost);
-		cudaMemcpy(b, d_b, N*sizeof(float), cudaMemcpyDeviceToHost);
-		print_sysequ();			
+		cudaMemcpy(b, d_b, N*sizeof(float), cudaMemcpyDeviceToHost);		
 	}
 
 	cudaFree(d_a);
 	cudaFree(d_b);
 	cudaFree(d_i);
+
+	save_sysequ();
 
 	return 0;
 }
