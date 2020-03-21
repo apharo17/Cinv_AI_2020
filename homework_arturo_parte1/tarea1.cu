@@ -1,9 +1,9 @@
 #include<stdio.h>
 #include <cuda_runtime.h>
-#define N 1000
+#define N 1200
 
 
-char input_file[]= "linsys_1000.txt";
+char input_file[]= "linsys_1200.txt";
 float a[N][N];
 float b[N];
 
@@ -119,7 +119,7 @@ int main(void) {
 	save_sysequ();
 
 	bw /= elapsedTime*1000000.0;
-	printf("Gaussian-Elimination GPU execution time: %7.3f ms, Throughput %6.2f GFLOPS\n", elapsedTime, bw);
+	printf("Gaussian-Elimination GPU execution time: %7.3f ms, Throughput %6.3f GFLOPS\n", elapsedTime, bw);
 
 	return 0;
 }
