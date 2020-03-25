@@ -2,7 +2,7 @@
 #include <math.h>
 #include <time.h>
 
-#define NPOINTS 10000
+#define NPOINTS 128
 #define NDIMS 5
 #define ITERS 1000
 
@@ -81,12 +81,14 @@ void gradientDescent() {
 		}
 
 
-		printf("Iteration %d, Cost = %.4f\n", k, cost);
-		printf("Weights:\t");
-		for (int i=0; i<NDIMS; i++) {
-			printf("%.4f\t", w[i]);
+		if (k<10) {
+			printf("Iteration %d, Cost = %.4f\n", k, cost);
+			printf("Weights:\t");
+			for (int i=0; i<NDIMS; i++) {
+				printf("%.4f\t", w[i]);
+			}
+			printf("\n");
 		}
-		printf("\n");
 
 	}
 
@@ -113,7 +115,7 @@ int main() {
 		for (int j=0; j<NDIMS; j++) {
 			dotprod += true_w[j]*points_x[i][j];
 		}
-		points_y[i] = dotprod + (float)normalRandom();
+		points_y[i] = dotprod + (float)normalRandom()*.2;
 	}
 	
 	//print_points();
