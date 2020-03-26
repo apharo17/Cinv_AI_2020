@@ -2,7 +2,7 @@
 #include <math.h>
 #include <time.h>
 
-#define NPOINTS 128 //It has to be a power of two
+#define NPOINTS 1024 //It has to be a power of two (from 64 to 1024)
 #define NDIMS 5
 #define ITERS 1000
 
@@ -89,14 +89,15 @@ __global__ void scale_x(float *d_score, float *d_points_x, float *d_points_x_cop
 }
 
 
-__global__ void compute_gradient(float *d_points_x_copy, float *d_gradient)
+__global__ void compute_gradient(float *d_points_x_copy, float *d_partial_grad)
 {
+	int block_idx = blockIdx.x; //index for block
 	int point_idx = threadIdx.x; //index for point
 	int dim_idx = threadIdx.y; //index for dimension
 
-    __shared__ float sdata[NPOINTS][NDIMS];
+    __shared__ float sdata[64][NDIMS];
 
-    sdata[point_idx][dim_idx] = d_points_x_copy[point_idx*NDIMS + dim_idx];
+    sdata[point_idx][dim_idx] = d_points_x_copy[(block_idx+1)*point_idx*NDIMS + dim_idx];
     __syncthreads();
 
 	for (unsigned int s=1; s < blockDim.x; s *= 2) {
@@ -108,7 +109,7 @@ __global__ void compute_gradient(float *d_points_x_copy, float *d_gradient)
 	}
 
 	if (point_idx == 0)
-		d_gradient[dim_idx] = sdata[0][dim_idx]/(1.0*NPOINTS);
+		d_partial_grad[block_idx*NDIMS + dim_idx] = sdata[0][dim_idx]/64.0;
 }
 
 
@@ -118,25 +119,24 @@ void gradientDescent() {
 	
 	float eta = 0.01;
 	float gradient[NDIMS];
+	float partial_grad[NPOINTS/64][NDIMS];
 
-	for (int i=0; i<NDIMS; i++)
+	for (int i=0; i<NDIMS; i++) {
 		w[i] = 0.;
+		gradient[i] = 0.;
+	}
 
-	float *d_points_x, *d_w, *d_score, *d_points_x_copy, *d_points_y, *d_gradient;
+	float *d_points_x, *d_w, *d_score, *d_points_x_copy, *d_points_y, *d_partial_grad;
 	cudaMalloc((void**)&d_points_x, sizeof(float)*NPOINTS*NDIMS);
 	cudaMalloc((void**)&d_w, sizeof(float)*NDIMS);
 	cudaMalloc((void**)&d_score, sizeof(float)*NPOINTS);
 	cudaMalloc((void**)&d_points_x_copy, sizeof(float)*NPOINTS*NDIMS);
 	cudaMalloc((void**)&d_points_y, sizeof(float)*NPOINTS);
-	cudaMalloc((void**)&d_gradient, sizeof(float)*NDIMS);
+	cudaMalloc((void**)&d_partial_grad, sizeof(float)*(NPOINTS/64)*NDIMS);
 
 
 	cudaMemcpy(d_points_x, points_x, sizeof(float)*NPOINTS*NDIMS, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_points_y, points_y, sizeof(float)*NPOINTS, cudaMemcpyHostToDevice);
-
-	//BORRAR
-	float score[NPOINTS];
-	float points_x_copy[NPOINTS][NDIMS];
 
 	for (int k=0; k<ITERS; k++) {
 
@@ -144,76 +144,27 @@ void gradientDescent() {
 		
 		compute_score<<<NPOINTS,NDIMS,NDIMS*sizeof(float)>>>(d_points_x, d_w, d_score);
 
-		/*if(k%100==0){
-			cudaMemcpy(score, d_score, sizeof(float)*NPOINTS, cudaMemcpyDeviceToHost);
-			printf("Iteration %d, Score:\n", k);
-			for (int i=0; i<NPOINTS; i++) {
-				printf("%.4f ", score[i]);
-			}
-			printf("\n");
-		}*/
-		
-
-
-
 		substract_y<<<1,NPOINTS>>>(d_score, d_points_y);
-
-		/*
-		if(k%100==0){
-			cudaMemcpy(score, d_score, sizeof(float)*NPOINTS, cudaMemcpyDeviceToHost);
-			printf("Iteration %d, Score:\n", k);
-			for (int i=0; i<NPOINTS; i++) {
-				printf("%.4f ", score[i]);
-			}
-			printf("\n");
-		}*/
 		
 		scale_x<<<NPOINTS,NDIMS>>>(d_score, d_points_x, d_points_x_copy);
-		
 
-		/*if(k==0){
-			cudaMemcpy(points_x_copy, d_points_x_copy, sizeof(float)*NPOINTS*NDIMS, cudaMemcpyDeviceToHost);
-			printf("Iteration %d, X:\n", k);
-			for (int i=0; i<NPOINTS; i++) {
-				for (int j=0; j<NDIMS; j++) {
-					printf("%.4f ", points_x_copy[i][j]);
-				}
-				printf("\n");
+		dim3 threads(64,NDIMS);
+		compute_gradient<<<(NPOINTS/64),threads>>>(d_points_x_copy, d_partial_grad);
+
+		cudaMemcpy(partial_grad, d_partial_grad, sizeof(float)*(NPOINTS/64)*NDIMS, cudaMemcpyDeviceToHost);
+
+		for (int i=0; i<(NPOINTS/64); i++) {
+			for (int j=0; j<NDIMS; j++) {
+				gradient[j] += partial_grad[i][j];
 			}
-			printf("\n");
-		}*/
-
-		
-
-
-
-
-		dim3 threads(NPOINTS,NDIMS);
-		compute_gradient<<<1,threads>>>(d_points_x_copy, d_gradient);
-
-		cudaMemcpy(gradient, d_gradient, sizeof(float)*NDIMS, cudaMemcpyDeviceToHost);
-
-		/*if(k<10){
-			printf("Iteration %d, Gradient:\n", k);
-			for (int i=0; i<NDIMS; i++) {
-				printf("%.4f ", gradient[i]);
-			}
-			printf("\n");
-		}*/
-
+		}
+		for (int i=0; i<NDIMS; i++) {
+			gradient[i] /= (NPOINTS/64.0);
+		}
 
 		//Update weights
 		for (int i=0; i<NDIMS; i++) {
 			w[i] -= eta*gradient[i];
-		}
-
-
-		if(k<10){
-			printf("Iteration %d, Weights:\n", k);
-			for (int i=0; i<NDIMS; i++) {
-				printf("%.4f ", w[i]);
-			}
-			printf("\n");
 		}
 	}
 
@@ -224,9 +175,10 @@ void gradientDescent() {
 	cudaFree(d_score);
 	cudaFree(d_points_x_copy);
 	cudaFree(d_points_y);
-	cudaFree(d_gradient);
+	cudaFree(d_partial_grad);
 
-	printf("Weights:\t");
+	printf("Total of points: %d\n",NPOINTS);
+	printf("Weights: ");
 	for (int i=0; i<NDIMS; i++) {
 		printf("%.4f\t", w[i]);
 	}
