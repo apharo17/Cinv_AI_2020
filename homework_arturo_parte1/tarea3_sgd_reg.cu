@@ -91,7 +91,6 @@ void sgradientDescent() {
   	int index;
   	int *d_indexes;
   	cudaMalloc((void**) &d_indexes, sizeof(int)*NPOINTS);
-
 	
 	for (int k=0; k<ITERS; k++) {
 
@@ -149,7 +148,6 @@ int main() {
 		points_y[i] = dotprod + (float)normalRandom()*.2;
 	}
 	
-	//print_points();
 	sgradientDescent();
 
 	return 0;
