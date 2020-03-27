@@ -3,7 +3,7 @@
 #include <time.h>
 #include <cuda_runtime.h>
 
-#define NPOINTS 64 //It has to be a power of two (from 64 to 1024)
+#define NPOINTS 1024 //It has to be a power of two (from 64 to 1024)
 #define NDIMS 2
 #define ITERS 1000
 
@@ -26,6 +26,15 @@ void print_points() {
 	}
 }
 
+void normalize (float *x, int n) {
+	float square_sum = 0.0;
+	for (int i=0; i<n; i++)
+		square_sum += x[i]*x[i];
+	square_sum = sqrt(square_sum);
+	for (int i=0; i<n; i++)
+		x[i] /= square_sum;
+}
+
 
 float compute_cost() {
 	float cost, dotprod;
@@ -46,7 +55,7 @@ float compute_cost() {
 
 
 
-__global__ void compute_score(float *d_points_x, float *d_w, float *d_score)
+__global__ void compute_sigmoid_score(float *d_points_x, float *d_w, float *d_score)
 {
     int point_idx = blockIdx.x; //index for point
     int dim_idx = threadIdx.x; //index for dimension
@@ -60,7 +69,7 @@ __global__ void compute_score(float *d_points_x, float *d_w, float *d_score)
     if (dim_idx == 0) {
     	for (int k=0; k<NDIMS; k++)
     		res += sdata[k];
-    		d_score[point_idx] = res;
+    	d_score[point_idx] = 1.0/(1.0 + expf(-res));
     }
 }
 
@@ -145,7 +154,7 @@ void gradientDescent() {
 
 		cudaMemcpy(d_w, w, sizeof(float)*NDIMS, cudaMemcpyHostToDevice);
 		
-		compute_score<<<NPOINTS,NDIMS,NDIMS*sizeof(float)>>>(d_points_x, d_w, d_score);
+		compute_sigmoid_score<<<NPOINTS,NDIMS,NDIMS*sizeof(float)>>>(d_points_x, d_w, d_score);
 
 		substract_y<<<1,NPOINTS>>>(d_score, d_points_y);
 		
@@ -169,6 +178,8 @@ void gradientDescent() {
 		for (int i=0; i<NDIMS; i++) {
 			w[i] -= eta*gradient[i];
 		}
+
+		normalize(w, NDIMS);
 	}
 
 	cudaDeviceSynchronize();
@@ -198,14 +209,6 @@ void gradientDescent() {
 }
 
 
-void normalize (float *x, int n) {
-	float square_sum = 0.0;
-	for (int i=0; i<n; i++)
-		square_sum += x[i]*x[i];
-	square_sum = sqrt(square_sum);
-	for (int i=0; i<n; i++)
-		x[i] /= square_sum;
-}
 
 
 int main() {
@@ -236,7 +239,7 @@ int main() {
 		points_y[i] = (dotprod>0) ? 1.0 : 0.0;
 	}
 	
-	//gradientDescent();
+	gradientDescent();
 
 	return 0;
 }
